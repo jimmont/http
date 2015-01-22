@@ -9,14 +9,21 @@ var
 httpCluster = function(){
 var 	defaults = {
 	// all keys for required properties
-		PORT: 8888
+		PORT: 8876
 		,NODE_ENV: 'develop'
 	}
-	,settings = (require('package.json') || {}).httpCluster || {}
+	,settings
 	;
+
+	try{
+		 settings = require('package.json').httpCluster || {};
+	}catch(err){
+		settings = {};
+	};
 	if(cluster.isMaster){
 		// setup settings for passing to workers
-		httpCluster.util.merge( defaults, env, settings );
+		httpCluster.util.merge( defaults, process.env, settings );
+		console.log('--> {} >',JSON.stringify(defaults));
 		// TODO logic for forking
 		// need to limit number of restarts and also try to automatically compute how many instances to fork
 		cluster.fork(); // n
@@ -50,7 +57,8 @@ var 	defaults = {
 		});
 		serverDomain.run(function(){
 			server = httpd( settings );
-			console.log("worker %s pid %s in %s mode listening on %s", cluster.worker && cluster.worker.id, process.pid, server.env, server.port);
+			console.log(Object.keys(cluster));
+			console.log("worker %s pid %s in %s mode listening on %s", cluster.worker && cluster.worker.id, process.pid, server.settings.NODE_ENV, server.settings.PORT);
 		});
 	};
 };
